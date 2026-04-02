@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "811496650686",
+    "project_id": "smartgas-c6396",
+    "storage_bucket": "smartgas-c6396.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:811496650686:android:0c4b78a749c67cebf62bef",
+        "android_client_info": {
+          "package_name": "com.rncore"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCR6qM9YqadzpqIIdNA11_tmGoDXGmfLrs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
