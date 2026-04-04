@@ -1,16 +1,24 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, Switch, Pressable } from 'react-native';
-import { MotiView } from 'moti';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TextInput,
+  Switch,
+  Pressable,
+} from 'react-native';
 import { useIoTStore } from '../store/useIoTStore';
 import { colors } from '../theme/colors';
 
 export const SettingsScreen = () => {
   const { settings, updateSettings } = useIoTStore();
-  const [localThreshold, setLocalThreshold] = useState(settings.threshold.toString());
+  const [localThreshold, setLocalThreshold] = useState(
+    settings.threshold.toString(),
+  );
 
   const handleSave = () => {
     updateSettings({
-      threshold: parseInt(localThreshold, 10) || 1350
+      threshold: parseInt(localThreshold, 10) || 1350,
     });
   };
 
@@ -18,13 +26,9 @@ export const SettingsScreen = () => {
     <View style={styles.container}>
       <Text style={styles.header}>Settings</Text>
 
-      <MotiView 
-        from={{ opacity: 0, translateY: 20 }}
-        animate={{ opacity: 1, translateY: 0 }}
-        style={styles.card}
-      >
+      <View style={styles.card}>
         <Text style={styles.label}>Gas Alert Threshold</Text>
-        <TextInput 
+        <TextInput
           style={styles.input}
           value={localThreshold}
           onChangeText={setLocalThreshold}
@@ -34,19 +38,14 @@ export const SettingsScreen = () => {
         <Pressable style={styles.button} onPress={handleSave}>
           <Text style={styles.buttonText}>Save Threshold</Text>
         </Pressable>
-      </MotiView>
+      </View>
 
-      <MotiView 
-        from={{ opacity: 0, translateY: 20 }}
-        animate={{ opacity: 1, translateY: 0 }}
-        transition={{ delay: 100 }}
-        style={styles.card}
-      >
+      <View style={styles.card}>
         <View style={styles.row}>
           <Text style={styles.label}>Enable Notifications</Text>
           <Switch
             value={settings.notificationsEnabled}
-            onValueChange={(val) => updateSettings({ notificationsEnabled: val })}
+            onValueChange={val => updateSettings({ notificationsEnabled: val })}
             trackColor={{ false: colors.surfaceLight, true: colors.primary }}
           />
         </View>
@@ -54,11 +53,11 @@ export const SettingsScreen = () => {
           <Text style={styles.label}>Emergency Auto-Call</Text>
           <Switch
             value={settings.emergencyCallEnabled}
-            onValueChange={(val) => updateSettings({ emergencyCallEnabled: val })}
+            onValueChange={val => updateSettings({ emergencyCallEnabled: val })}
             trackColor={{ false: colors.surfaceLight, true: colors.danger }}
           />
         </View>
-      </MotiView>
+      </View>
     </View>
   );
 };
@@ -112,5 +111,5 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-  }
+  },
 });

@@ -1,6 +1,5 @@
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
-import { MotiView, MotiText } from 'moti';
+import { StyleSheet, View, Text } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 import { colors } from '../theme/colors';
 
@@ -16,19 +15,7 @@ export const AnimatedGauge = ({ value, max = 2000, status }) => {
 
   return (
     <View style={styles.container}>
-      <MotiView
-        animate={{
-          shadowColor: activeColor,
-          shadowOpacity: isDanger ? 0.8 : 0.5,
-          scale: isDanger ? [1, 1.05, 1] : 1, // Pulse effect in danger
-        }}
-        transition={{
-          loop: isDanger,
-          type: 'timing',
-          duration: 1000,
-        }}
-        style={styles.gaugeWrapper}
-      >
+      <View style={styles.gaugeWrapper}>
         <Svg width={240} height={240} viewBox="0 0 240 240">
           <Circle
             cx="120"
@@ -52,16 +39,12 @@ export const AnimatedGauge = ({ value, max = 2000, status }) => {
           />
         </Svg>
         <View style={styles.centerText}>
-          <MotiText 
-            style={[styles.valueText, { color: activeColor }]}
-            animate={{ scale: isDanger ? [1, 1.1, 1] : 1 }}
-            transition={{ loop: isDanger, duration: 1000 }}
-          >
+          <Text style={[styles.valueText, { color: activeColor }]}>
             {value}
-          </MotiText>
-          <MotiText style={styles.label}>PPM</MotiText>
+          </Text>
+          <Text style={styles.label}>PPM</Text>
         </View>
-      </MotiView>
+      </View>
     </View>
   );
 };

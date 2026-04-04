@@ -1,8 +1,12 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { MotiView } from 'moti';
-import { Fan, Bell, Power, Settings as SettingsIcon } from 'lucide-react-native';
+import {
+  Fan,
+  Bell,
+  Power,
+  Settings as SettingsIcon,
+} from 'lucide-react-native';
 import { useIoTStore } from '../store/useIoTStore';
 import { colors } from '../theme/colors';
 import { AnimatedGauge } from '../components/AnimatedGauge';
@@ -19,65 +23,69 @@ export const DashboardScreen = () => {
       style={styles.container}
     >
       <ScrollView contentContainerStyle={styles.scroll}>
-        <MotiView
-          from={{ opacity: 0, translateY: -20 }}
-          animate={{ opacity: 1, translateY: 0 }}
-          style={styles.header}
-        >
+        <View style={styles.header}>
           <View>
             <Text style={styles.title}>IoT Gas System</Text>
-            <View style={[styles.statusBadge, { backgroundColor: isConnected ? colors.success : colors.danger }]}>
-              <Text style={styles.statusText}>{isConnected ? 'ONLINE' : 'OFFLINE'}</Text>
+            <View
+              style={[
+                styles.statusBadge,
+                {
+                  backgroundColor: isConnected ? colors.success : colors.danger,
+                },
+              ]}
+            >
+              <Text style={styles.statusText}>
+                {isConnected ? 'ONLINE' : 'OFFLINE'}
+              </Text>
             </View>
           </View>
           <Pressable onPress={() => navigation.navigate('Settings')}>
             <SettingsIcon color={colors.textSecondary} size={28} />
           </Pressable>
-        </MotiView>
+        </View>
 
-        <MotiView
-          from={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ type: 'spring', delay: 200 }}
-          style={styles.card3d}
-        >
+        <View style={styles.card3d}>
           <AnimatedGauge value={device.gasLevel} status={device.status} />
           <View style={styles.indicatorContainer}>
             <Text style={styles.indicatorLabel}>System Status:</Text>
-            <Text style={[styles.indicatorValue, { color: device.status === 'SAFE' ? colors.success : colors.danger }]}>
+            <Text
+              style={[
+                styles.indicatorValue,
+                {
+                  color:
+                    device.status === 'SAFE' ? colors.success : colors.danger,
+                },
+              ]}
+            >
               {device.status}
             </Text>
           </View>
-        </MotiView>
+        </View>
 
-        <MotiView
-          from={{ opacity: 0, translateY: 20 }}
-          animate={{ opacity: 1, translateY: 0 }}
-          transition={{ delay: 400 }}
-        >
+        <View>
           <Text style={styles.sectionTitle}>Manual Controls</Text>
           <DeviceToggle
             title="Exhaust Fan"
             icon={Fan}
             value={device.fan}
-            onToggle={(val) => updateDeviceToggle('fan', val)}
+            onToggle={val => updateDeviceToggle('fan', val)}
             disabled={!isConnected || device.status === 'DANGER'} // Auto locked in danger
           />
           <DeviceToggle
             title="Buzzer Alarm"
             icon={Bell}
             value={device.buzzer}
-            onToggle={(val) => updateDeviceToggle('buzzer', val)}
+            onToggle={val => updateDeviceToggle('buzzer', val)}
             disabled={!isConnected || device.status === 'DANGER'}
           />
           <DeviceToggle
             title="Gas Valve (Servo)"
             icon={Power}
             value={device.servo}
-            onToggle={(val) => updateDeviceToggle('servo', val)}
+            onToggle={val => updateDeviceToggle('servo', val)}
             disabled={!isConnected || device.status === 'DANGER'}
           />
-        </MotiView>
+        </View>
       </ScrollView>
     </LinearGradient>
   );

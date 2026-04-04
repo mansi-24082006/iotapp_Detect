@@ -1,22 +1,16 @@
 import React, { useEffect } from 'react';
 import { View, Text, Switch, StyleSheet, Pressable } from 'react-native';
-import { MotiView } from 'moti';
 import { colors } from '../theme/colors';
 
-export const DeviceToggle = ({ title, icon: Icon, value, onToggle, disabled }) => {
+export const DeviceToggle = ({
+  title,
+  icon: Icon,
+  value,
+  onToggle,
+  disabled,
+}) => {
   return (
-    <MotiView
-      style={[styles.container, value && styles.containerActive]}
-      animate={{
-        scale: value ? 1.05 : 1,
-        backgroundColor: value ? colors.surfaceLight : colors.surface,
-        borderColor: value ? colors.primary : colors.border,
-        shadowOpacity: value ? 0.8 : 0,
-        rotateX: value ? '5deg' : '0deg', // 3D tilt effect when active
-        rotateY: value ? '-2deg' : '0deg',
-      }}
-      transition={{ type: 'spring', damping: 12 }}
-    >
+    <View style={[styles.container, value && styles.containerActive]}>
       <View style={styles.header}>
         <Icon color={value ? colors.primary : colors.textSecondary} size={24} />
         <Text style={[styles.title, value && styles.titleActive]}>{title}</Text>
@@ -29,7 +23,7 @@ export const DeviceToggle = ({ title, icon: Icon, value, onToggle, disabled }) =
         value={value}
         disabled={disabled}
       />
-    </MotiView>
+    </View>
   );
 };
 
