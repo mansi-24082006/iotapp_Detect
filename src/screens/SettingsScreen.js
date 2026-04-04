@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -15,6 +15,10 @@ export const SettingsScreen = () => {
   const [localThreshold, setLocalThreshold] = useState(
     settings.threshold.toString(),
   );
+
+  useEffect(() => {
+    setLocalThreshold(settings.threshold.toString());
+  }, [settings.threshold]);
 
   const handleSave = () => {
     updateSettings({
