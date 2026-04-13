@@ -25,19 +25,20 @@ const KNOWN_STATES = new Set([
 ]);
 
 const deriveDeviceState = (device, threshold) => {
-  const gasLevel = Number(device?.gasValue ?? 0);
+  const gasLevel = Number(device?.gasValue ?? device?.gasLevel ?? 0);
   const cloudThreshold = Number(device?.threshold ?? threshold ?? 1800);
-  const isLatched = Boolean(device?.latched ?? false);
-  const isDanger = Boolean(device?.danger ?? false);
+  // Support both /sensor/state structure and /device folder structure
+  const isLatched = Boolean(device?.latched ?? (device?.status === 'WARNING'));
+  const isDanger = Boolean(device?.danger ?? (device?.status === 'DANGER'));
   const rawStatus = typeof device?.status === 'string' ? device.status : 'NORMAL';
 
   // State mapping for UI
   const state = isDanger ? 'GAS_DETECTED' : (isLatched ? 'WARNING' : 'NORMAL');
-  const statusLabel = isDanger ? 'DANGER' : (isLatched ? 'RESET REQUIRED' : 'SAFE');
+  const statusLabel = rawStatus === 'DANGER' ? 'DANGER' : (rawStatus === 'WARNING' ? 'RESET REQUIRED' : 'SAFE');
 
-  const fan = Boolean(device?.fanOn ?? false);
-  const servo = Boolean(device?.servoClosed ?? false);
-  const buzzer = Boolean(device?.buzzerOn ?? false);
+  const fan = Boolean(device?.fanOn ?? device?.fan ?? false);
+  const servo = Boolean(device?.servoClosed ?? device?.servo ?? false);
+  const buzzer = Boolean(device?.buzzerOn ?? device?.buzzer ?? false);
 
   return {
     ...DEFAULT_DEVICE,
@@ -69,9 +70,9 @@ export const useIoTStore = create((set, get) => ({
       set({ isConnected: snap.val() === true });
     });
 
-    // Main Status Listener (/sensor/state)
-    const stateRef = db.ref('/sensor/state');
-    stateRef.on('value', snapshot => {
+    // Main Status Listener (/sensor/state or /device)
+    const deviceRef = db.ref('/device');
+    deviceRef.on('value', snapshot => {
       const data = snapshot.val();
       if (data) {
         set(state => ({
@@ -79,6 +80,17 @@ export const useIoTStore = create((set, get) => ({
             { ...state.device, ...data },
             state.settings.threshold,
           ),
+        }));
+      }
+    });
+
+    // Dedicated Live Gas Listener
+    const gasRef = db.ref('/sensor/gas');
+    gasRef.on('value', snapshot => {
+      const gasValue = snapshot.val();
+      if (gasValue !== null) {
+        set(state => ({
+          device: { ...state.device, gasLevel: Number(gasValue) }
         }));
       }
     });
