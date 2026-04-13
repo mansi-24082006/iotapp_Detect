@@ -2,43 +2,88 @@ import { create } from 'zustand';
 import { db } from '../services/firebase';
 import { initMessaging } from '../services/notifications';
 
-const getStatusFromGasLevel = (gasLevel, threshold) =>
-  gasLevel >= threshold ? 'DANGER' : 'SAFE';
+const DEFAULT_DEVICE = {
+  gasLevel: 0,
+  threshold: 1600,
+  gasDetected: false,
+  sensorWarmedUp: false,
+  eventLatched: false,
+  status: 'SAFE',
+  state: 'NORMAL',
+  fan: false,
+  buzzer: false,
+  servo: false,
+  rawStatus: 'NORMAL',
+  lastUpdated: 0,
+};
+
+const KNOWN_STATES = new Set([
+  'NORMAL',
+  'WARMING_UP',
+  'GAS_DETECTED',
+  'WAITING_MANUAL_RESET',
+]);
+
+const deriveDeviceState = (device, threshold) => {
+  const gasLevel = Number(device?.gasValue ?? 0);
+  const cloudThreshold = Number(device?.threshold ?? threshold ?? 1800);
+  const isLatched = Boolean(device?.latched ?? false);
+  const isDanger = Boolean(device?.danger ?? false);
+  const rawStatus = typeof device?.status === 'string' ? device.status : 'NORMAL';
+
+  // State mapping for UI
+  const state = isDanger ? 'GAS_DETECTED' : (isLatched ? 'WARNING' : 'NORMAL');
+  const statusLabel = isDanger ? 'DANGER' : (isLatched ? 'RESET REQUIRED' : 'SAFE');
+
+  const fan = Boolean(device?.fanOn ?? false);
+  const servo = Boolean(device?.servoClosed ?? false);
+  const buzzer = Boolean(device?.buzzerOn ?? false);
+
+  return {
+    ...DEFAULT_DEVICE,
+    ...device,
+    gasLevel,
+    threshold: cloudThreshold,
+    gasDetected: isDanger,
+    eventLatched: isLatched,
+    status: statusLabel,
+    state,
+    buzzer,
+    fan,
+    servo,
+  };
+};
 
 export const useIoTStore = create((set, get) => ({
-  device: {
-    gasLevel: 0,
-    status: 'SAFE',
-    fan: false,
-    buzzer: false,
-    servo: false,
-    lastUpdated: 0,
-  },
+  device: DEFAULT_DEVICE,
   settings: {
-    threshold: 1350,
+    threshold: 1800,
     notificationsEnabled: true,
-    emergencyCallEnabled: false,
-    emergencyNumber: '',
   },
   isConnected: false,
 
   initListeners: () => {
-    // Listen for connection state using Native Firebase string refs
+    // Connection State
     const connectedRef = db.ref('.info/connected');
     connectedRef.on('value', snap => {
       set({ isConnected: snap.val() === true });
     });
 
-    // Listen to /device
-    const deviceRef = db.ref('/device');
-    deviceRef.on('value', snapshot => {
+    // Main Status Listener (/sensor/state)
+    const stateRef = db.ref('/sensor/state');
+    stateRef.on('value', snapshot => {
       const data = snapshot.val();
       if (data) {
-        set(state => ({ device: { ...state.device, ...data } }));
+        set(state => ({
+          device: deriveDeviceState(
+            { ...state.device, ...data },
+            state.settings.threshold,
+          ),
+        }));
       }
     });
 
-    // Listen to /settings
+    // Settings Listener
     const settingsRef = db.ref('/settings');
     settingsRef.on('value', snapshot => {
       const data = snapshot.val();
@@ -47,13 +92,7 @@ export const useIoTStore = create((set, get) => ({
           const nextSettings = { ...state.settings, ...data };
           return {
             settings: nextSettings,
-            device: {
-              ...state.device,
-              status: getStatusFromGasLevel(
-                state.device.gasLevel,
-                nextSettings.threshold,
-              ),
-            },
+            device: deriveDeviceState(state.device, nextSettings.threshold),
           };
         });
       }
@@ -70,31 +109,39 @@ export const useIoTStore = create((set, get) => ({
 
   updateDeviceToggle: async (key, value) => {
     try {
-      await db.ref(`/device/${key}`).set(value);
+      const { device } = get();
+      // Allow manual toggle only if gas is safe but we are in the latched state
+      if (!device.gasDetected && device.eventLatched) {
+        if (key === 'fan') await db.ref('/controls/fan').set(value);
+        if (key === 'servo') await db.ref('/controls/servo').set(value);
+      }
     } catch (e) {
       console.error('Failed to update toggle', e);
     }
   },
 
+  triggerReset: async type => {
+    try {
+      const { device } = get();
+      // Only allow reset if gas is cleared
+      if (device.gasDetected) {
+        return;
+      }
+
+      if (type === 'all' || type === 'reset') {
+        await db.ref('/controls/reset').set(true);
+      }
+    } catch (e) {
+      console.error('Failed to trigger reset', e);
+    }
+  },
+
   updateSettings: async newSettings => {
     try {
-      set(state => {
-        const nextSettings = { ...state.settings, ...newSettings };
-        return {
-          settings: nextSettings,
-          device: {
-            ...state.device,
-            status: getStatusFromGasLevel(
-              state.device.gasLevel,
-              nextSettings.threshold,
-            ),
-          },
-        };
-      });
+      set(state => ({
+        settings: { ...state.settings, ...newSettings }
+      }));
       await db.ref('/settings').update(newSettings);
-      if (typeof newSettings.threshold === 'number') {
-        await db.ref('/threshold').set(newSettings.threshold);
-      }
     } catch (e) {
       console.error('Failed to update settings', e);
     }

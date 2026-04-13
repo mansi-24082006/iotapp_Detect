@@ -11,7 +11,7 @@ export const AnimatedGauge = ({ value, max = 2000, status }) => {
   const progress = Math.min(value / max, 1);
   const strokeDashoffset = CIRCUMFERENCE - progress * CIRCUMFERENCE;
   const activeColor = isDanger ? colors.danger : colors.primary;
-  const activeGlow = isDanger ? colors.dangerGlow : colors.primaryGlow;
+  const stateLabel = isDanger ? 'ALERT ACTIVE' : 'NORMAL';
 
   return (
     <View style={styles.container}>
@@ -43,6 +43,14 @@ export const AnimatedGauge = ({ value, max = 2000, status }) => {
             {value}
           </Text>
           <Text style={styles.label}>PPM</Text>
+          <View
+            style={[
+              styles.statePill,
+              { backgroundColor: isDanger ? colors.danger : colors.success },
+            ]}
+          >
+            <Text style={styles.stateText}>{stateLabel}</Text>
+          </View>
         </View>
       </View>
     </View>
@@ -76,5 +84,17 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.textSecondary,
     marginTop: 4,
+  },
+  statePill: {
+    marginTop: 14,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 999,
+  },
+  stateText: {
+    color: colors.background,
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 1,
   },
 });

@@ -5,6 +5,7 @@ import { colors } from '../theme/colors';
 export const DeviceToggle = ({
   title,
   icon: Icon,
+  subtitle,
   value,
   onToggle,
   disabled,
@@ -13,7 +14,12 @@ export const DeviceToggle = ({
     <View style={[styles.container, value && styles.containerActive]}>
       <View style={styles.header}>
         <Icon color={value ? colors.primary : colors.textSecondary} size={24} />
-        <Text style={[styles.title, value && styles.titleActive]}>{title}</Text>
+        <View style={styles.textBlock}>
+          <Text style={[styles.title, value && styles.titleActive]}>
+            {title}
+          </Text>
+          {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
+        </View>
       </View>
       <Switch
         trackColor={{ false: colors.surfaceLight, true: colors.primary }}
@@ -52,11 +58,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
+  textBlock: {
+    marginLeft: 12,
+  },
   title: {
     color: colors.textSecondary,
     fontSize: 18,
     fontWeight: '600',
-    marginLeft: 12,
+  },
+  subtitle: {
+    color: colors.textMuted,
+    fontSize: 12,
+    marginTop: 4,
   },
   titleActive: {
     color: colors.textPrimary,
