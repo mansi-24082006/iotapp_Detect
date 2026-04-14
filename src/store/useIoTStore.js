@@ -25,20 +25,28 @@ const KNOWN_STATES = new Set([
 ]);
 
 const deriveDeviceState = (device, threshold) => {
-  const gasLevel = Number(device?.gasValue ?? device?.gasLevel ?? 0);
+  const gasLevel = Number(device?.gasLevel ?? 0);
   const cloudThreshold = Number(device?.threshold ?? threshold ?? 1800);
-  // Support both /sensor/state structure and /device folder structure
-  const isLatched = Boolean(device?.latched ?? (device?.status === 'WARNING'));
-  const isDanger = Boolean(device?.danger ?? (device?.status === 'DANGER'));
+
+  // Align with ESP32 keys: gasDetected, eventLatched
+  const isDanger = Boolean(device?.gasDetected ?? false);
+  const isLatched = Boolean(device?.eventLatched ?? false);
+
   const rawStatus = typeof device?.status === 'string' ? device.status : 'NORMAL';
 
   // State mapping for UI
+  // state: NORMAL, WARNING (Latched), GAS_DETECTED (Danger)
   const state = isDanger ? 'GAS_DETECTED' : (isLatched ? 'WARNING' : 'NORMAL');
-  const statusLabel = rawStatus === 'DANGER' ? 'DANGER' : (rawStatus === 'WARNING' ? 'RESET REQUIRED' : 'SAFE');
 
-  const fan = Boolean(device?.fanOn ?? device?.fan ?? false);
-  const servo = Boolean(device?.servoClosed ?? device?.servo ?? false);
-  const buzzer = Boolean(device?.buzzerOn ?? device?.buzzer ?? false);
+  // statusLabel for the circular gauge/header
+  const statusLabel =
+    isDanger ? 'DANGER' :
+      (isLatched ? 'RESET REQUIRED' :
+        (rawStatus === 'WARMING_UP' ? 'WARMING UP' : 'SAFE'));
+
+  const fan = Boolean(device?.fanOn ?? false);
+  const servo = Boolean(device?.servoAt90 ?? false);
+  const buzzer = Boolean(device?.buzzerOn ?? false);
 
   return {
     ...DEFAULT_DEVICE,
@@ -54,6 +62,7 @@ const deriveDeviceState = (device, threshold) => {
     servo,
   };
 };
+
 
 export const useIoTStore = create((set, get) => ({
   device: DEFAULT_DEVICE,
